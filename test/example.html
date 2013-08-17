@@ -64,9 +64,9 @@
     <!-- container -->
     <div class="container">
 
-      <div class="alert">
+      <!-- div class="alert">
         <strong>Warning!</strong> Best check yo self, you're not looking too good.
-      </div>
+      </div -->
 
       <table class="table table-striped">
         <thead>
@@ -87,7 +87,7 @@
     <script src="//yandex.st/highlightjs/7.3/highlight.min.js"></script>
     <script type="text/javascript" src="../dist/track.js"></script>
     <script type="text/javascript">
-      var trackId, interval = 30 * 1000, init = false, fixes = 0, display = 5,
+      var trackId, interval = 30 * 1000, init = false, fixes = 0, display = 20,
         transform = function (position) {
           var coords = position.coords;
           return {
@@ -115,9 +115,8 @@
           var prettify = hljs.highlightAuto(stringify).value;
           var table = $(".table > tbody");
           table.prepend('<tr><td><pre><code class="json">' +
-            hljs.fixMarkup(prettify) + '</code></pre></td><td class="center" ' +
-            'style="vertical-align: middle;"><span class="badge">' + interval +
-            '</span></td></tr>');
+            hljs.fixMarkup(prettify) + '</code></pre></td><td class="center>' +
+            '<span class="badge">' + interval + '</span></td></tr>');
           fixes++;
           /* $("#fix-count").text(fixes + ' ' + ((fixes === 1) ? 'fix' : 'fixes') +
             ' in last run'); */
