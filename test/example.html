@@ -115,7 +115,7 @@
           var prettify = hljs.highlightAuto(stringify).value;
           var table = $(".table > tbody");
           table.prepend('<tr><td><pre><code class="json">' +
-            hljs.fixMarkup(prettify) + '</code></pre></td><td class="center>' +
+            hljs.fixMarkup(prettify) + '</code></pre></td><td class="center">' +
             '<span class="badge">' + interval + '</span></td></tr>');
           fixes++;
           /* $("#fix-count").text(fixes + ' ' + ((fixes === 1) ? 'fix' : 'fixes') +
