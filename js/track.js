@@ -95,7 +95,7 @@
       console.log('Clearing track execution using: %s', trackId);
       navigator.geolocation.clearWatch(trackId);
       if (typeof workers[trackId] !== "undefined") {
-        window.clearInterval(workers[trackId]);
+        window.clearInterval(workers[trackId].id);
         delete workers[trackId];
       }
     };
