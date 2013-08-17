@@ -1,0 +1,35 @@
+{
+  "name": "geolocation-track",
+  "version": "0.1.0",
+  "description": "A realtime mobile tracking application.",
+  "homepage": "http://outa.im",
+  "author": {
+    "name": "outaTiME",
+    "url": "http://outa.im/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/outaTiME/geolocation-track.git"
+  },
+  "bugs": {
+    "url": "https://github.com/outaTiME/geolocation-track/issues"
+  },
+  "main": "Gruntfile.js",
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.0",
+    "grunt-contrib-concat": "~0.1.0",
+    "grunt-contrib-jshint": "~0.3.0",
+    "grunt-contrib-clean": "~0.4.0",
+    "grunt-contrib-watch": "~0.4.4",
+    "grunt-contrib-uglify": "~0.2.2",
+    "grunt-strip": "~0.2.0",
+    "grunt-notify": "~0.1.4"
+  },
+  "private": true
+}

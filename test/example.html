@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Geolocation Track &#8212; Example</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0-wip/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//yandex.st/highlightjs/7.3/styles/github.min.css">
+    <style type="text/css">
+      body {
+        /* min-height: 2000px; */
+        padding-top: 70px;
+      }
+      pre code {
+        padding: 0;
+        background-color: hsla(0, 0%, 0%, 0);
+      }
+      pre {
+        padding: 0;
+        margin: 0;
+        border: 0;
+        background-color: hsla(0, 0%, 0%, 0);
+      }
+      .center {
+        text-align: center;
+      }
+      #fix-count {
+        /* color: hsl(200, 50%, 45%); */
+        /* background-color: #d9edf7; */
+        background-color: #428bca;
+        /* border-color: #bce8f1; */
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Geolocation Track</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a id="start" href="#">Start</a></li>
+            <li class="active"><a id="stop" href="#">Stop</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Interval <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li class="active"><a class="update-interval" id="30" href="#">30 seconds</a></li>
+                <li><a class="update-interval" id="60" href="#">60 seconds</a></li>
+                <li><a class="update-interval" id="90" href="#">90 seconds</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- container -->
+    <div class="container">
+
+      <div class="alert">
+        <strong>Warning!</strong> Best check yo self, you're not looking too good.
+      </div>
+
+      <table class="table table-striped">
+        <thead>
+          <!-- tr>
+            <th>Fix</th>
+            <th>Interval</th>
+          </tr -->
+        </thead>
+        <tbody>
+          <!-- tr>
+          </tr -->
+        </tbody>
+      </table>
+    </div>
+
+    <script src="//code.jquery.com/jquery.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0-wip/js/bootstrap.min.js"></script>
+    <script src="//yandex.st/highlightjs/7.3/highlight.min.js"></script>
+    <script type="text/javascript" src="../dist/track.js"></script>
+    <script type="text/javascript">
+      var trackId, interval = 30 * 1000, init = false, fixes = 0, display = 5,
+        transform = function (position) {
+          var coords = position.coords;
+          return {
+            "timestamp": position.timestamp,
+            "coords": {
+              "speed": coords.speed,
+              "heading": coords.heading,
+              "accuracy": coords.accuracy,
+              "longitude": coords.longitude,
+              "latitude": coords.latitude
+            }
+          }
+        },
+        addFix = function (position, interval) {
+          if (init === false) {
+            // first time
+            $(".table > thead").prepend('<tr><th>Fix ' +
+              '<span id="fix-count" class="badge"></span></th>'+
+              '<th class="center">Interval</th></tr>');
+            init = true;
+          }
+          // custom detail
+          var tranformedPosition = transform(position);
+          var stringify = JSON.stringify(tranformedPosition, undefined, 2);
+          var prettify = hljs.highlightAuto(stringify).value;
+          var table = $(".table > tbody");
+          table.prepend('<tr><td><pre><code class="json">' +
+            hljs.fixMarkup(prettify) + '</code></pre></td><td class="center" ' +
+            'style="vertical-align: middle;"><span class="badge">' + interval +
+            '</span></td></tr>');
+          fixes++;
+          /* $("#fix-count").text(fixes + ' ' + ((fixes === 1) ? 'fix' : 'fixes') +
+            ' in last run'); */
+          // $("#fix-count").text(fixes);
+          if (table.children().length > display) {
+            table.find('tr:last').remove();
+          }
+        };
+      jQuery(document).ready(function() {
+        // start
+        $("#start").click(function () {
+          if (typeof trackId === "undefined") {
+            $("#stop").parent().removeClass('active');
+            $("#start").parent().addClass('active');
+            var start_time = new Date().getTime(), count = 0;
+            trackId = navigator.geolocation.trackPosition(
+              function (position) {
+                var end_time = new Date().getTime();
+                /* console.log("Position updated, took: %s second(s): %o",
+                  Math.round((end_time - start_time) / 1000), position); */
+                addFix(position, Math.round((end_time - start_time) / 1000));
+                start_time = end_time;
+                count ++;
+                /* if (count >= 2) {
+                  trackId = undefined;
+                  return false;
+                } */
+              },
+              function (error) {
+                console.error("Error while trying to track device: %o", error);
+              },
+              {
+                interval: interval,
+                desiredAccuracy: 100, // meters
+                // timeout: 3000,
+                maximumAge: 0, // fresh locations
+                enableHighAccuracy: true // high accuracy
+              }
+            );
+          }
+        });
+        // stop
+        $("#stop").click(function () {
+          if (typeof trackId !== "undefined") {
+            $("#start").parent().removeClass('active');
+            $("#stop").parent().addClass('active');
+            navigator.geolocation.clearTrack(trackId);
+            trackId = undefined;
+          }
+        });
+        // update
+        $(".update-interval").click(function () {
+          if (typeof trackId !== "undefined") {
+            jQuery('.update-interval').parent().removeClass('active');
+            interval = parseInt(this.id, 10);
+            navigator.geolocation.updateTrackInterval(trackId, interval * 1000);
+            jQuery('.update-interval#' + interval).parent().addClass('active');
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
