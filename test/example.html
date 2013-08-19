@@ -122,7 +122,22 @@
               zoom: 17,
               center: myLatlng,
               disableDefaultUI: true,
-              mapTypeId: google.maps.MapTypeId.ROADMAP
+              draggable: false,
+              zoomControl: false,
+              scrollwheel: false,
+              disableDoubleClickZoom: true,
+              mapTypeId: google.maps.MapTypeId.ROADMAP,
+              styles: [
+                {
+                  featureType: "poi",
+                  elementType: "labels",
+                  stylers: [
+                    {
+                      visibility: "off"
+                    }
+                  ]
+                }
+              ]
             }
             $('#map-canvas').show();
             map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
