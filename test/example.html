@@ -145,15 +145,18 @@
               position: myLatlng,
               map: map
             });
-            google.maps.event.addDomListener(window, 'resize', function() {
-                map.setCenter(marker.getPosition());
+            google.maps.event.addDomListener(window, 'resize', function () {
+              map.setCenter(marker.getPosition());
+            });
+            google.maps.event.addDomListener(window, 'orientationchange', function () {
+              map.setCenter(marker.getPosition());
             });
             init = true;
           } else {
             marker.setPosition(myLatlng);
-            if (!map.getBounds().contains(myLatlng)) {
-              map.panTo(myLatlng);
-            }
+            // if (!map.getBounds().contains(myLatlng)) {
+            map.setCenter(myLatlng);
+            // }
           }
           // custom detail
           var stringify = JSON.stringify(tranformedPosition, undefined, 2);
