@@ -7,7 +7,7 @@
 
     var settings = {
 
-      interval: 30 * 1000 // 30 secs
+      interval: 15 * 1000 // 15 secs
 
     };
 
@@ -43,8 +43,7 @@
           }
           return result;
         };
-      // trace
-      console.log('Track started...');
+      console.log('Track position starts...');
       // tracking worker
       trackId = navigator.geolocation.watchPosition(
         function (position) {
@@ -52,18 +51,18 @@
             lastPosition = position;
             console.log('Initial fix: %o', lastPosition);
             if (callback(lastPosition) !== false) {
-              console.log('Worker run every %s second(s)', interval / 1000);
-              // create worker to execute in the future
+              // FIXME: ugly worker object creation and re-throw
               var worker = {
-                timestamp: new Date().getTime(),
+                interval: interval,
                 callback: function () {
                   console.log('Worker execution done, fix: %o', lastPosition);
                   callback(lastPosition);
-                  // update time in each execution
-                  worker.timestamp = new Date().getTime();
+                  // re-throw
+                  worker.id = window.setTimeout(worker.callback, worker.interval);
                 }
               };
-              worker.id = window.setInterval(worker.callback, interval);
+              // create worker to execute in the future
+              worker.id = window.setTimeout(worker.callback, interval);
               // store
               workers[trackId] = worker;
             }
@@ -81,21 +80,20 @@
 
     geo.updateTrackInterval = function (trackId, interval) {
       interval = interval || settings.interval;
-      console.log('Updating track execution using: %s', trackId);
+      console.log('Track position interval updated to: %s second(s)',
+        interval / 1000);
       if (typeof workers[trackId] !== "undefined") {
-        var worker = workers[trackId],
-          running = new Date().getTime() - worker.timestamp;
-        console.log('Running time: %s second(s)', running / 1000);
-        // window.clearInterval(workers[trackId]);
-        // delete workers[trackId];
+        var worker = workers[trackId];
+        // update interval
+        worker.interval = interval;
       }
     };
 
     geo.clearTrack = function (trackId) {
-      console.log('Clearing track execution using: %s', trackId);
+      console.log('Track position stops...');
       navigator.geolocation.clearWatch(trackId);
       if (typeof workers[trackId] !== "undefined") {
-        window.clearInterval(workers[trackId].id);
+        window.clearTimeout(workers[trackId].id);
         delete workers[trackId];
       }
     };
