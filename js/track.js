@@ -18,11 +18,32 @@
     geo.trackPosition = function (success, error, opts) {
       opts = opts || {};
       var
-        trackId,
+        trackId = new Date().getTime(),
         interval = opts.interval || settings.interval,
         desiredAccuracy = opts.desiredAccuracy,
-        lastPosition,
-        udpatePosition = function (position) {
+        lastPosition;
+      console.log('Track position starts...');
+      // worker
+      // FIXME: ugly worker object creation and re-throw
+      var worker = {
+        interval: interval,
+        callback: function () {
+          console.log('Worker execution done, fix: %o', lastPosition);
+          if (typeof lastPosition === "undefined") {
+            error(); // unable to take accurate position in desired time
+          } else {
+            success(lastPosition);
+          }
+          // re-throw
+          worker.id = window.setTimeout(worker.callback, worker.interval);
+        }
+      };
+      // create worker to execute in the future
+      worker.id = window.setTimeout(worker.callback, interval);
+      // tracking worker
+      worker.watchPositionId = navigator.geolocation.watchPosition(
+        function (position) {
+          // update for better position (if found)
           if (typeof desiredAccuracy !== "undefined") {
             if (position.coords.accuracy <= desiredAccuracy) {
               lastPosition = position;
@@ -34,46 +55,10 @@
             lastPosition = position;
           }
         },
-        callback = function (position) {
-          var result = success(position);
-          if (result === false) {
-            console.log('Callback cancels execution, wreck-it Ralph...');
-            // cancel execution
-            geo.clearTrack(trackId);
-          }
-          return result;
-        };
-      console.log('Track position starts...');
-      // tracking worker
-      trackId = navigator.geolocation.watchPosition(
-        function (position) {
-          if (typeof workers[trackId] === "undefined") {
-            lastPosition = position;
-            console.log('Initial fix: %o', lastPosition);
-            if (callback(lastPosition) !== false) {
-              // FIXME: ugly worker object creation and re-throw
-              var worker = {
-                interval: interval,
-                callback: function () {
-                  console.log('Worker execution done, fix: %o', lastPosition);
-                  callback(lastPosition);
-                  // re-throw
-                  worker.id = window.setTimeout(worker.callback, worker.interval);
-                }
-              };
-              // create worker to execute in the future
-              worker.id = window.setTimeout(worker.callback, interval);
-              // store
-              workers[trackId] = worker;
-            }
-          } else {
-            console.log('Worker already running, fix: %o', position);
-            // update for better position (if found)
-            udpatePosition(position);
-          }
-        },
         error,
         opts);
+      // store
+      workers[trackId] = worker;
       // return tracking identifier
       return trackId;
     };
@@ -91,9 +76,11 @@
 
     geo.clearTrack = function (trackId) {
       console.log('Track position stops...');
-      navigator.geolocation.clearWatch(trackId);
       if (typeof workers[trackId] !== "undefined") {
-        window.clearTimeout(workers[trackId].id);
+        var worker = workers[trackId];
+        // clear
+        navigator.geolocation.clearWatch(worker.watchPositionId);
+        window.clearTimeout(worker.id);
         delete workers[trackId];
       }
     };
