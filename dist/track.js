@@ -17,7 +17,7 @@
 
     var settings = {
 
-      interval: 15 * 1000 // 15 secs
+      frequency: 15 * 1000 // 15 secs
 
     };
 
@@ -29,27 +29,33 @@
       opts = opts || {};
       var
         trackId = new Date().getTime(),
-        interval = opts.interval || settings.interval,
+        frequency = opts.frequency || settings.frequency,
         desiredAccuracy = opts.desiredAccuracy,
-        lastPosition;
-      console.log('Track position starts...');
-      // worker
-      // FIXME: ugly worker object creation and re-throw
-      var worker = {
-        interval: interval,
-        callback: function () {
-          console.log('Worker execution done, fix: %o', lastPosition);
-          if (typeof lastPosition === "undefined") {
-            error(); // unable to take accurate position in desired time
-          } else {
-            success(lastPosition);
+        lastPosition,
+        // FIXME: ugly worker object creation and re-throw
+        worker = {
+          frequency: frequency,
+          callback: function () {
+            console.log('Worker %s, took fix: %o', worker.id, lastPosition);
+            if (typeof lastPosition === "undefined") {
+              error(); // unable to take accurate position in desired time
+            } else {
+              success(lastPosition);
+            }
+            if (typeof workers[trackId] !== "undefined") { // stops in success ??
+              // re-throw
+              worker.id = window.setTimeout(worker.callback, worker.frequency);
+              console.log('Worker %s, created', worker.id);
+            } else {
+              // console.warn('Worker %s, execution canceled', worker.id);
+            }
           }
-          // re-throw
-          worker.id = window.setTimeout(worker.callback, worker.interval);
-        }
-      };
+        };
+      // starts
+      console.log('Track position starts...');
       // create worker to execute in the future
-      worker.id = window.setTimeout(worker.callback, interval);
+      worker.id = window.setTimeout(worker.callback, frequency);
+      console.log('Worker %s, created', worker.id);
       // tracking worker
       worker.watchPositionId = navigator.geolocation.watchPosition(
         function (position) {
@@ -73,14 +79,14 @@
       return trackId;
     };
 
-    geo.updateTrackInterval = function (trackId, interval) {
-      interval = interval || settings.interval;
-      console.log('Track position interval updated to: %s second(s)',
-        interval / 1000);
+    geo.updateTrackFrequency = function (trackId, frequency) {
+      frequency = frequency || settings.frequency;
+      console.log('Track position frequency updated to: %s second(s)',
+        frequency / 1000);
       if (typeof workers[trackId] !== "undefined") {
         var worker = workers[trackId];
-        // update interval
-        worker.interval = interval;
+        // update frequency
+        worker.frequency = frequency;
       }
     };
 
@@ -91,6 +97,7 @@
         // clear
         navigator.geolocation.clearWatch(worker.watchPositionId);
         window.clearTimeout(worker.id);
+        console.log('Worker %s, cleared', worker.id);
         delete workers[trackId];
       }
     };
