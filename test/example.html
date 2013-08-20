@@ -4,7 +4,7 @@
     <title>Geolocation Track &#8212; Example</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-theme.min.css">
+    <!--link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-theme.min.css"-->
     <link rel="stylesheet" href="//yandex.st/highlightjs/7.3/styles/github.min.css">
     <style type="text/css">
       body {
@@ -35,7 +35,7 @@
   <body>
 
     <!-- Fixed navbar -->
-    <div class="navbar navbar-fixed-top">
+    <div class="navbar navbar-default navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -50,12 +50,12 @@
             <li><a id="start" href="#">Start</a></li>
             <li class="active"><a id="stop" href="#">Stop</a></li>
             <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Interval <b class="caret"></b></a>
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Frequency <b class="caret"></b></a>
               <ul class="dropdown-menu">
-                <li class="active"><a class="update-interval" id="15" href="#">15 seconds</a></li>
-                <li><a class="update-interval" id="30" href="#">30 seconds</a></li>
-                <li><a class="update-interval" id="60" href="#">60 seconds</a></li>
-                <li><a class="update-interval" id="90" href="#">90 seconds</a></li>
+                <li class="active"><a class="update-frequency" id="15" href="#">15 seconds</a></li>
+                <li><a class="update-frequency" id="30" href="#">30 seconds</a></li>
+                <li><a class="update-frequency" id="60" href="#">60 seconds</a></li>
+                <li><a class="update-frequency" id="90" href="#">90 seconds</a></li>
               </ul>
             </li>
           </ul>
@@ -78,7 +78,7 @@
         <thead>
           <!-- tr>
             <th>Fix</th>
-            <th>Interval</th>
+            <th>Frequency</th>
           </tr -->
         </thead>
         <tbody>
@@ -94,7 +94,7 @@
     <script src="//yandex.st/highlightjs/7.3/highlight.min.js"></script>
     <script type="text/javascript" src="../dist/track.js"></script>
     <script type="text/javascript">
-      var trackId, interval = 15 * 1000, init = false, fixes = 0,
+      var trackId, frequency = 15, init = false, fixes = 0,
         display = 20, map, marker,
         transform = function (position) {
           var coords = position.coords;
@@ -109,7 +109,7 @@
             }
           }
         },
-        addFix = function (position, interval) {
+        addFix = function (position, frequency) {
           var tranformedPosition = transform(position);
           var myLatlng = new google.maps.LatLng(position.coords.latitude,
             position.coords.longitude);
@@ -117,7 +117,7 @@
             // first time
             $(".table > thead").prepend('<tr><th>Fix ' +
               '<span id="fix-count" class="badge"></span></th>'+
-              '<th class="center">Interval</th></tr>');
+              '<th class="center">Frequency</th></tr>');
             // create map
             var mapOptions = {
               zoom: 17,
@@ -165,7 +165,7 @@
           var table = $(".table > tbody");
           table.prepend('<tr><td><pre><code class="json">' +
             hljs.fixMarkup(prettify) + '</code></pre></td><td class="center">' +
-            '<span class="badge">' + interval + '</span></td></tr>');
+            '<span class="badge">' + frequency + '</span></td></tr>');
           fixes++;
           /* $("#fix-count").text(fixes + ' ' + ((fixes === 1) ? 'fix' : 'fixes') +
             ' in last run'); */
@@ -173,6 +173,10 @@
           if (table.children().length > display) {
             table.find('tr:last').remove();
           }
+        },
+        collapseNavBar = function () {
+          var navBar = $('.navbar-collapse');
+          navBar.removeClass('in').addClass('collapse');
         };
       jQuery(document).ready(function() {
         // start
@@ -198,7 +202,7 @@
                 console.error("Error while trying to track device: %o", error);
               },
               {
-                interval: interval,
+                frequency: frequency * 1000,
                 desiredAccuracy: 100, // meters
                 // timeout: 3000,
                 maximumAge: 0, // fresh locations
@@ -206,6 +210,7 @@
               }
             );
           }
+          collapseNavBar();
         });
         // stop
         $("#stop").click(function () {
@@ -215,15 +220,17 @@
             navigator.geolocation.clearTrack(trackId);
             trackId = undefined;
           }
+          collapseNavBar();
         });
         // update
-        $(".update-interval").click(function () {
+        $(".update-frequency").click(function () {
+          jQuery('.update-frequency').parent().removeClass('active');
+          frequency = parseInt(this.id, 10);
+          jQuery('.update-frequency#' + frequency).parent().addClass('active');
           if (typeof trackId !== "undefined") {
-            jQuery('.update-interval').parent().removeClass('active');
-            interval = parseInt(this.id, 10);
-            navigator.geolocation.updateTrackInterval(trackId, interval * 1000);
-            jQuery('.update-interval#' + interval).parent().addClass('active');
+            navigator.geolocation.updateTrackFrequency(trackId, frequency * 1000);
           }
+          collapseNavBar();
         });
       });
     </script>
